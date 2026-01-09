@@ -4,7 +4,7 @@ ___
 
 To import my files in your game, follow these steps:
 
-Step 1: After freshly opening the game, paste this into your mindstone. Comment all imports if you have any.
+Step 1: After freshly opening the game, paste this into your mindstone. Comment all uncommented imports.
 ```
 sys.cacheRemoteFiles = false
 var directory =
