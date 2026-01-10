@@ -17,62 +17,83 @@ Discord: seltos7224
 // 6 - marker
 // 10+ - ship tile preview (subtract 10 for the non-preview-equivalent tile value)
 
-var playButton  // Start the game
-var playButtonText  // Text written on playButton
-var replayButton  // Start a new game
-var menuButton  // Exit to main menu
-var exitButton  // Exit to main menu, then exit loc
-var markerButton  // Marker mode toggle button
-var markerBtnText  // Additional text written on markerButton
-var fancyX = ascii
-┌###┐
-##x##
-└###┘
-asciiend  // Text for markerBtnText
-var easyModeButton  // Easy gamemode button
-var mediumModeButton  // Medium gamemode button
-var hardModeButton  // Hard gamemode button
-var gamemode = 1  // gamemode 1 (default) - easy, 2 - medium, 3 - hard
-var allowUpdates = false  // Allow/disallow updating _Tiles and _Buttons arrays
-var playerMarkers = []  // Player marker list
-var enemyMarkers = []  // Enemy marker list
-var markerMode = false  // Toggle marker mode
-var confirmShips  // Confirm ship placement
-var confirmShipsText  // Text written on confirmShips
+  // Gameplay
+var shipTileCount = 20  // Total ship tiles per board
+var ships = [4, 3, 3, 2, 2, 2, 1, 1, 1, 1]  // All ships and sizes
+var selectedShipSize = 4
+var shipCounter  // Displays ships remaining of both sides
+var directions = [  // Ship direction [y, x]
+  [1, 0],  // vertical
+  [0, 1]  // horizontal
+]
+var rotateButton  // Changes ship orientation
+var rotateButtonText
+var placeHorizontal = true  // True if the ship is going to be placed horizontally
+var confirmShips  // Confirm placed ships button
+var confirmShipsText
 var ship4  // 4-tile ship
 var ship3  // 3-tile ship
 var ship2  // 2-tile ship
 var ship1  // 1-tile ship
-var ship4text  // text for ship4
-var ship3text  // text for ship3
-var ship2text  // text for ship2
-var ship1text  // text for ship1
-var ship2horizontal = ["#,#│\n▼▲▼▲", ">###\n▼▲▼#"]  // horizontal 2-tile ship ascii
-var ship3horizontal = ["#,#╞\n▼▲▼▲", "╬#╤═\n▼▲▼▲", ">###\n▼▲▼#"]  // horizontal 3-tile ship ascii
-var ship4horizontal = ["#┌o#\n▼▲▼▲", "_▄╞╬\n▼▲▼▲", "#┌☼♂\n▼▲▼▲", "☼┐##\n▼▲▼#"]  // horizontal 4-tile ship ascii
-var ship2vertical = ["#^##\n/ \#", "│⌐φ•\n\_/#"]  // vertical 2-tile ship ascii
-var ship3vertical = ["#^##\n/ \#", "│ φ═\n│ │#", "\☼/#\n#¯##"]  // vertical 3-tile ship ascii
-var ship4vertical = ["#^##\n/ \#", "│ │#\n│ φ═", "│ φ═\n│ │#", "\☼/#\n#V##"]  // vertical 4-tile ship ascii
-var selectedShipSize = 4  // Size of the selected ship. Default: 4
-var rotateButton  // Changes ship orientation
-var rotateButtonText  // Text for rotateButton
-var placeHorizontal = true  // True if the ship is going to be placed horizontally
-var shipTileCount = 20  // Total ship tiles per board
+var ship4text  // Button text
+var ship3text  // Button text
+var ship2text  // Button text
+var ship1text  // Button text & ascii
+var ship2horizontal = ["#,#│\n▼▲▼▲", ">###\n▼▲▼#"]
+var ship3horizontal = ["#,#╞\n▼▲▼▲", "╬#╤═\n▼▲▼▲", ">###\n▼▲▼#"]
+var ship4horizontal = ["#┌o#\n▼▲▼▲", "_▄╞╬\n▼▲▼▲", "#┌☼♂\n▼▲▼▲", "☼┐##\n▼▲▼#"]
+var ship2vertical = ["#^##\n/ \#", "│⌐φ•\n\_/#"]
+var ship3vertical = ["#^##\n/ \#", "│ φ═\n│ │#", "\☼/#\n#¯##"]
+var ship4vertical = ["#^##\n/ \#", "│ │#\n│ φ═", "│ φ═\n│ │#", "\☼/#\n#V##"]
+/// make these enemy ascii
+var ship1textEnemy = "[│##\n▼▲▼#"
+var ship2horizontalEnemy = ["##[│\n▼▲▼▲", "#,##\n▼▲▼#"]
+var ship3horizontalEnemy = ["##{═\n▼▲▼▲", "╤#╞╪\n▼▲▼▲", "#,##\n▼▲▼#"]
+var ship4horizontalEnemy = ["#┌☼λ\n▼▲▼▲", "☼┐╞╪\n▼▲▼▲", "#▄_ \n▼▲▼▲", "o┐##\n▼▲▼#"]
+var ship2verticalEnemy = ["##^#\n#/ \\", "•α¬│\n#\_/"]
+var ship3verticalEnemy = ["##^#\n#/ \\", "═α │\n#│ │", "#\☼/\n##¯#"]
+var ship4verticalEnemy = ["##^#\n#/ \\", "#│ │\n═α │", "═α │\n#│ │", "#\☼/\n##V#"]
 var previewedShipCoords = []  // Storing previewed ship coordinates
 var placedShipCoords = []  // Storing placed ship coordinates
 var placedShipCoordsFlattened = []  // Storing placed ship coordinates (flattened)
 var placedEnemyShipCoords = []  // Storing placed enemy ship coordinates
+var playerMarkers = []  // Player marker list ([y, x, previous_ID])
+var enemyMarkers = []  // Enemy marker list ([y, x, previous_ID])
+var eHitY  // Y coordinate of the P tile that will be attacked
+var eHitX  // X coordinate of the P tile that will be attacked
+var eHitTile  // P tile that will be attacked
+var eHitList = []  // List of tiles that the enemy hit (in order)
+var possibleHitList = []  // List of guessed coordinates for the next attack on a hit ship
+var __randInt  // A random int used with possibleHitList
+
+  // UI
+var playButton  // Start the game
+var playButtonText
+var exitButton  // Exit to main menu, then exit loc
+var fancyX = ascii
+┌###┐
+##x##
+└###┘
+asciiend
+var easyModeButton
+var mediumModeButton
+var hardModeButton
+var gamemode = 1  // gamemode 1 (default) - easy, 2 - medium, 3 - hard
 var bgPanel  // Covers the background
-var playerGridPanel  // Player board panel
-var enemyGridPanel  // Enemy board panel
+var markerButton  // Marker mode toggle button
+var markerBtnText
+var markerMode = false  // Toggle marker mode
+var playerGridPanel  // Player board
+var enemyGridPanel  // Enemy board
 var pTiles = []  // Player board tiles
 var eTiles = []  // Enemy board tiles
 var pButtons = []  // Player board buttons
 var eButtons = []  // Enemy board buttons
 var pButtonText = []  // Player board ascii
 var eButtonText = []  // Enemy board ascii
-var pCoords  // Coordinates
-var eCoords  // Coordinates
+var allowUpdates = false  // Allow updating _Tiles and _Buttons arrays
+var pCoords  // Coordinate labels
+var eCoords  // Coordinate labels
 var coordText = ascii
 ##1·##2·##3·##4·##5·##6·##7·##8·##9·##10#
 A
@@ -96,36 +117,29 @@ I
 J
 ·
 asciiend
-var shipCounter  // Displays ships remaining of both sides
-var ships = [4, 3, 3, 2, 2, 2, 1, 1, 1, 1]  // All ship sizes
-var directions = [  // Ship direction [y, x]
-  [1, 0],  // vertical
-  [0, 1]  // horizontal
-]
-var playerTurn = true  // Tracks turns
-var turnCount = 1  // Counts turns
-var eHitY  // Y coordinate of the P tile that will be attacked
-var eHitX  // X coordinate of the P tile that will be attacked
-var eHitTile  // P tile that will be attacked
-var eHitList = []  // List of tiles that the enemy hit (in order)
-var possibleHitList = []  // List of guessed coordinates for the next attack on a hit ship
-var __randInt  // A random int used with possibleHitList
-var pHitScore = 0  // Hit ship score counter for the player
-var eHitScore = 0  // Hit ship score counter for the enemy
-var pSinkScore = 0  // Destroyed ship counter for the player
-var eSinkScore = 0  // Destroyed ship counter for the enemy
-var score  // Total score
-var victoryPanel  // A panel announcing victory
-var victoryText  // UI text for victoryPanel
+var victoryPanel  // Victory/defeat pop-up
+var victoryText
 var generateVictoryPanel = -1  // Custom 3-value boolean (1 - do, 0 - don't, -1 - idle)
-var confirmActionPanel  // Confirm action pop-up
-var confirmActionText  // Text on the panel
-var confirmActionButton  // Confirm button
-var cancelActionButton  // Cancel button
+var replayButton  // Start a new game
+var menuButton  // Exit to main menu
+var confirmActionPanel  // "Confirm action?" pop-up
+var confirmActionText
+var confirmActionButton
+var cancelActionButton
 var infoPanel  // A panel that shows information about the game
-var infoText  // The text in infoPanel
+var infoText
 var infoButton  // infoPanel toggle button
-var infoBtnText  // Additional text written on infoButton
+var infoBtnText
+
+  // Turns and score
+var playerTurn = true  // Tracks turns
+var turnCount = 1  // Counts turns for scoring
+var pHitScore = 0
+var eHitScore = 0
+var pSinkScore = 0
+var eSinkScore = 0
+var score  // Total score
+
 
 // Add UI components
 ?loc = "Waterfall" & loc.begin
@@ -249,7 +263,7 @@ asciiend
   eCoords.color = "#4c7589"
 
     // Remaining ships display
-  shipCounter = AddUI(text, top_right, top_left, 8, 1, 3, -2)
+  shipCounter = AddUI(text, top_right, top_left, 8, 2, 3, -3)
   enemyGridPanel.Add(shipCounter)
 
     // Ship confirm button (player)
@@ -440,23 +454,38 @@ asciiend
 ?rotateButton.visible & key = "ability1Begin"
   RotateShip()
 
+// Delay between turns and shooting animations
+var turnDelay = 0
+>@turnDelay@
+?turnDelay > 0
+  turnDelay --
+  ?pButtons[0][0].visible
+    for y = 0..9
+      for x = 0..9
+        pButtons[y][x].visible = false
+        eButtons[y][x].visible = false
+  :?turnDelay <= 0
+    for y = 0..9
+      for x = 0..9
+        pButtons[y][x].visible = "inherit"
+        eButtons[y][x].visible = "inherit"
+        
+
 // Enemy turn
-?!playerTurn
+:?!playerTurn
   // Reset eHitTile and possibleHitList
   eHitTile = -1
   possibleHitList.Clear()
 
   // Choose a tile to hit
-  ?eHitList.Count() = 0 | gamemode = 1
+  ?eHitList.Count() = 0
     eHitY = RandIntInRange(0, 9)
     eHitX = RandIntInRange(0, 9)
     var rerolleHitTiles = false
     for i = 0..99
-      ?gamemode = 3
-        var sx = [-1, 0, 1]
-        var sy = [-1, 0, 1]
-        for sxi : sx
-          for syi : sy
+      ?gamemode >= 3
+        for sxi : [-1, 0, 1]
+          for syi : [-1, 0, 1]
             ?eHitY + syi < 0 | eHitX + sxi < 0 | eHitY + syi > 9 | eHitX + sxi > 9
               continue
             ?!(sxi = 0 & syi = 0)
@@ -504,19 +533,24 @@ asciiend
 
       // Optimize up or down / left or right choice
       var rerolleHitTiles1 = false
-      var sx = [-1, 0, 1]
-      var sy = [-1, 0, 1]
-      for i = 1..2
-        var tryY
-        var tryX
-        ?firstX = lastX
-          tryY = firstY - 1
-          tryX = firstX
+      var rerolleHitTiles3 = false
+      var tryY
+      var tryX
+      ?firstX = lastX
+        ?firstY = 0
+          tryY = lastY + 1
         :
-          tryY = firstY
+          tryY = firstY - 1
+        tryX = firstX
+      :
+        tryY = firstY
+        ?firstX = 0
+          tryX = lastY + 1
+        :
           tryX = firstX - 1
-        for sxi : sx
-          for syi : sy
+      ?tryX <= 9 & tryX >= 0 & tryY <= 9 & tryY >= 0
+        for sxi : [-1, 0, 1]
+          for syi : [-1, 0, 1]
             ?tryY + syi < 0 | tryX + sxi < 0 | tryY + syi > 9 | tryX + sxi > 9
               continue
             ?!(sxi = 0 & syi = 0)
@@ -526,56 +560,38 @@ asciiend
                 break
           ?rerolleHitTiles1
             break
-        
+      :
+        rerolleHitTiles3 = true
+      
       // Vertical ship
       ?firstX = lastX
         // Up (if not, down)
-        ?firstY - 1 >= 0 & [0, 1, 2, 6].Contains(pTiles[firstY - 1][firstX]) & !rerolleHitTiles1
+        ?firstY - 1 >= 0 & [0, 1, 2, 6].Contains(pTiles[firstY - 1][firstX]) & (gamemode < 3 | !rerolleHitTiles1) & !rerolleHitTiles3
           possibleHitList.Add([firstY - 1, firstX])
-        :
+        :?lastY + 1 < 9
           possibleHitList.Add([lastY + 1, firstX])
           rerolleHitTiles1 = false
-        /* (old)
-        ?firstY - 1 >= 0 & rerollehit
-          ?([0,1,2,6].Contains(pTiles[firstY - 1][firstX]))
-            possibleHitList.Add([firstY - 1, firstX])
         :
-          ?([0,1,2,6].Contains(pTiles[lastY + 1][firstX]))
-            possibleHitList.Add([lastY + 1, firstX])
-        // Down (if not, up)
-        ?lastY + 1 <= 9
-          ?([0,1,2,6].Contains(pTiles[lastY + 1][firstX]))
-            possibleHitList.Add([lastY + 1, firstX])
-        :
-          ?([0,1,2,6].Contains(pTiles[firstY - 1][firstX]))
-            possibleHitList.Add([firstY - 1, firstX]) */
+          possibleHitList.Clear()
+          rerolleHitTiles1 = false
+          rerolleHitTiles3 = false
       // Horizontal ship
       :?firstY = lastY
         // Left (if not, right)
-        ?firstX - 1 >= 0 & [0, 1, 2, 6].Contains(pTiles[firstY][firstX - 1]) & !rerolleHitTiles1
+        ?firstX - 1 >= 0 & [0, 1, 2, 6].Contains(pTiles[firstY][firstX - 1]) & (gamemode < 3 | !rerolleHitTiles1) & !rerolleHitTiles3
           possibleHitList.Add([firstY, firstX - 1])
-        :
+        :?lastX + 1 < 9
           possibleHitList.Add([firstY, lastX + 1])
           rerolleHitTiles1 = false
-        /* (old)
-        ?firstX - 1 >= 0
-          ?([0,1,2,6].Contains(pTiles[firstY][firstX - 1]))
-            possibleHitList.Add([firstY, firstX - 1])
         :
-          ?([0,1,2,6].Contains(pTiles[firstY][lastX + 1]))
-            possibleHitList.Add([firstY, lastX + 1])
-        // Right (if not, left)
-        ?lastX + 1 <= 9
-          ?([0,1,2,6].Contains(pTiles[firstY][lastX + 1]))
-            possibleHitList.Add([firstY, lastX + 1])
-        :
-          ?([0,1,2,6].Contains(pTiles[firstY][firstX - 1]))
-            possibleHitList.Add([firstY, firstX - 1]) */
+          possibleHitList.Clear()
+          rerolleHitTiles1 = false
+          rerolleHitTiles3 = false
       
       // If there is at least one extension option
       ?possibleHitList.Count() > 0
         __randInt = RandIntInRange(0, possibleHitList.Count()-1)
-        ?gamemode = 3 | RandIntInRange(1, 2) = 1
+        ?gamemode >= 2 | RandIntInRange(1, 100) <= 12
           eHitY = possibleHitList[__randInt][0]
           eHitX = possibleHitList[__randInt][1]
         :
@@ -587,14 +603,27 @@ asciiend
               eHitX = RandIntInRange(0, 9)
             :
               break
-        eHitTile = pTiles[eHitY][eHitX]
       : // No extensions, make a random attack
         eHitY = RandIntInRange(0, 9)
         eHitX = RandIntInRange(0, 9)
         for i = 0..99
-          ?![0, 1, 2, 6].Contains(pTiles[eHitY][eHitX])
+          var rerolleHitTiles2 = false
+          ?gamemode >= 3
+            for sxi : [-1, 0, 1]
+              for syi : [-1, 0, 1]
+                ?eHitY + syi < 0 | eHitX + sxi < 0 | eHitY + syi > 9 | eHitX + sxi > 9
+                  continue
+                ?!(sxi = 0 & syi = 0)
+                  ?pTiles[eHitY + syi][eHitX + sxi] = 5
+                  ^| (pTiles[eHitY + syi][eHitX + sxi] = 4 & math.Abs(syi) = math.Abs(sxi))
+                    rerolleHitTiles2 = true
+                    break
+              ?rerolleHitTiles2 = true
+                break
+          ?![0, 1, 2, 6].Contains(pTiles[eHitY][eHitX]) | rerolleHitTiles2
             eHitY = RandIntInRange(0, 9)
             eHitX = RandIntInRange(0, 9)
+            rerolleHitTiles2 = false
           :
             break
       eHitTile = pTiles[eHitY][eHitX]
@@ -616,16 +645,18 @@ asciiend
   // Apply the attack
   ?[0, 1, 6].Contains(eHitTile)  // (The shot hits water.)
     pTiles[eHitY][eHitX] = 3
+    turnDelay = 31
     playerTurn = true
     turnCount ++
   :?eHitTile = 2  // (The shot hits a ship. Continue the turn.)
     pTiles[eHitY][eHitX] = 4
     eHitList.Add([eHitY, eHitX])
+    turnDelay = 31
     KillShip(pTiles, eHitY, eHitX)
     eHitScore ++
-  :  // (Insurance. If eHitTile is in [3, 4, 5], skip turn to escape error.)
-    playerTurn = true
-    turnCount ++
+  // :  // (Insurance. If eHitTile is in [3, 4, 5], skip turn to escape error.)
+  //   playerTurn = true
+  //   turnCount ++
 
 // Ship counter
 var pSunk = [pSinkScore, 10]
@@ -644,7 +675,7 @@ var spaceFiller = ""
   spaceFiller = " "
 :
   spaceFiller = ""
-shipCounter.text = "[color=#3ba2d5]" + spaceFiller + eSunk[1] + "[/color]" + "[color=#999999] || [/color]" + "[color=#ffa800]" + pSunk[1] + "[/color]"
+shipCounter.text = "[color=#999999]#Turn " + turnCount + "[/color]\n[color=#3ba2d5]" + spaceFiller + eSunk[1] + "[/color]" + "[color=#999999] || [/color]" + "[color=#ffa800]" + pSunk[1] + "[/color]"
 
 // Throw an error when a ship is not selected while placing them (player)
 var selectionErrorMessage = "Please select a ship."
@@ -670,7 +701,11 @@ var boolSwitchTimer = 90
       boolSwitchTimer ++
 
 // Calculate score
-score = math.Max(0, ((pHitScore + pSinkScore) * 70 / 40) - ((eHitScore + eSinkScore) * 70 / 40) + (math.Max(0, math.Floor(31 - turnCount * 0.75)) * 30 / 30))  // Decrease turnCount multiplier softer punishment. Raw score range: [0, 70]; Adapted: [0, 100]
+var gamemodeModifier = [0.55, 0.7, 0.85, 1]  // easy, medium, hard, expert
+score = math.RoundToInt(math.Max(0, ((pHitScore + pSinkScore) * 70 / 40) - ((eHitScore + eSinkScore) * 40 / 40) + (math.Max(0, math.Floor(31 - turnCount * 0.5)) * 30 / 30)) * gamemodeModifier[gamemode - 1])
+  // Decrease turnCount multiplier (k) softer punishment. k = 0.6 yields bonus pts up to turn 50 (30/k turns).
+  // Soft cap formula (harsher punishment for letting the enemy hit you at the beginning, then it evens out at the end. p (power) = 0.8 yields max punishment of 50.5 points) -> "...- ((eHitScore + eSinkScore) ^ 0.8 * 70 / 40) +..."
+  // Raw score range: [0, 70]; Adapted: [0, 100]
 
 // Victory check
 ?pHitScore = 20
@@ -834,16 +869,25 @@ func SetMode (btn)
     easyModeButton.style = 3
     mediumModeButton.style = 1
     hardModeButton.style = 1
+    // expertModeButton.style = 1
   :?btn = mediumModeButton
     gamemode = 2
     easyModeButton.style = 1
     mediumModeButton.style = 3
     hardModeButton.style = 1
+    // expertModeButton.style = 1
   :?btn = hardModeButton
     gamemode = 3
     easyModeButton.style = 1
     mediumModeButton.style = 1
     hardModeButton.style = 3
+    // expertModeButton.style = 1
+  // :?btn = expertModeButton
+  //   gamemode = 4
+  //   easyModeButton.style = 1
+  //   mediumModeButton.style = 1
+  //   hardModeButton.style = 1
+  //   expertModeButton.style = 3
 
 // Start the game
 func Start ()
@@ -956,9 +1000,9 @@ func CancelAction (btn)
   ?playerGridPanel.visible & !pButtons[0][0].visible
     for y = 0..9
       for x = 0..9
-        pButtons[y][x].visible = inherit
+        pButtons[y][x].visible = "inherit"
         ?enemyGridPanel.visible
-          eButtons[y][x].visible = inherit
+          eButtons[y][x].visible = "inherit"
 
 // Generate boards
 func GenerateMap ()
@@ -1691,46 +1735,46 @@ var flashTimer = flashDuration + 2
         :?eTiles[y][x] = 5
           for L1 : placedEnemyShipCoords
             ?L1.Count() = 1 & L1[0][0] = y & L1[0][1] = x
-              eButtonText[y][x].text = ship1text.text
+              eButtonText[y][x].text = ship1textEnemy
             :?L1.Count() > 1
               for i = 0..L1.Count()-1
                 ?L1[0][0] = L1[1][0] & L1[0][0] = y
                   ?L1[i][1] = x
                     ?L1.Count() = 2
-                      eButtonText[y][x].text = ship2horizontal[i]
+                      eButtonText[y][x].text = ship2horizontalEnemy[i]
                     :?L1.Count() = 3
-                      eButtonText[y][x].text = ship3horizontal[i]
+                      eButtonText[y][x].text = ship3horizontalEnemy[i]
                     :?L1.Count() = 4
-                      eButtonText[y][x].text = ship4horizontal[i]
+                      eButtonText[y][x].text = ship4horizontalEnemy[i]
                 :?L1[0][1] = L1[1][1] & L1[0][1] = x
                   ?L1[i][0] = y
                     ?L1.Count() = 2
-                      eButtonText[y][x].text = ship2vertical[i]
+                      eButtonText[y][x].text = ship2verticalEnemy[i]
                     :?L1.Count() = 3
-                      eButtonText[y][x].text = ship3vertical[i]
+                      eButtonText[y][x].text = ship3verticalEnemy[i]
                     :?L1.Count() = 4
-                      eButtonText[y][x].text = ship4vertical[i]
+                      eButtonText[y][x].text = ship4verticalEnemy[i]
         /* :?eTiles[y][x] = 12
           ?previewedEnemyShipCoords.Count() = 1 & previewedEnemyShipCoords[0][0] = y & previewedEnemyShipCoords[0][1] = x
-            eButtonText[y][x].text = ship1text.text
+            eButtonText[y][x].text = ship1textEnemy
           :?previewedEnemyShipCoords.Count() > 1
             for i = 0..previewedEnemyShipCoords.Count()-1
               ?previewedEnemyShipCoords[0][0] = previewedEnemyShipCoords[1][0] & previewedEnemyShipCoords[0][0] = y
                 ?previewedEnemyShipCoords[i][1] = x
                   ?previewedEnemyShipCoords.Count() = 2
-                    eButtonText[y][x].text = ship2horizontal[i]
+                    eButtonText[y][x].text = ship2horizontalEnemy[i]
                   :?previewedEnemyShipCoords.Count() = 3
-                    eButtonText[y][x].text = ship3horizontal[i]
+                    eButtonText[y][x].text = ship3horizontalEnemy[i]
                   :?previewedEnemyShipCoords.Count() = 4
-                    eButtonText[y][x].text = ship4horizontal[i]
+                    eButtonText[y][x].text = ship4horizontalEnemy[i]
               :?previewedEnemyShipCoords[0][1] = previewedEnemyShipCoords[1][1] & previewedEnemyShipCoords[0][1] = x
                 ?previewedEnemyShipCoords[i][0] = y
                   ?previewedEnemyShipCoords.Count() = 2
-                    eButtonText[y][x].text = ship2vertical[i]
+                    eButtonText[y][x].text = ship2verticalEnemy[i]
                   :?previewedEnemyShipCoords.Count() = 3
-                    eButtonText[y][x].text = ship3vertical[i]
+                    eButtonText[y][x].text = ship3verticalEnemy[i]
                   :?previewedEnemyShipCoords.Count() = 4
-                    eButtonText[y][x].text = ship4vertical[i] */
+                    eButtonText[y][x].text = ship4verticalEnemy[i] */
         :?eTiles[y][x] = 3
           eButtonText[y][x].text = hitTileTexture
         :?eTiles[y][x] = 6
@@ -1743,4 +1787,5 @@ var flashTimer = flashDuration + 2
   allowUpdates = false
 
 
+disable hud b
 disable pause
