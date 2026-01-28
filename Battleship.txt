@@ -538,11 +538,13 @@ var shotCanvas = AddUI("canvas", "top_left", "top_left", playerGridPanel.w + ene
     var projSpeed
     var setCanvasY
     var setCanvasX
-    //FIXME There is no animation or delay when the player hits a ship and gets an extra turn
+    //TODO There is no animation or delay when the player hits a ship and gets an extra turn
+    //TODO Limit weapon choice to the minimum Y difference between startpos and endpos
     //FIXME attacks start from the player on enemy turn (if the enemy gets an extra turn, the shot goes haywire)
     ?prevEHitListCount[1] ! prevEHitListCount[2]
       isEnemyAttack = true
     //FIXME shot anim (player anim starts from the right spot but doesn't end in the right spot)
+    // diagonal movement doesn't go very well
     ?turnDelay >= delayTime - 1
       ?isEnemyAttack
         randWeapon = enemyWeaponAbsPos[RandIntInRange(0, enemyWeaponAbsPos.Count()-1)]
@@ -556,20 +558,20 @@ var shotCanvas = AddUI("canvas", "top_left", "top_left", playerGridPanel.w + ene
       startX = randWeapon[1]
       distY = endY - startY
       distX = endX - startX
-      pathLength = math.Sqrt(distY * distY  +  distX * distX)
-      dirY = math.RoundToInt(distY / pathLength)
-      dirX = math.RoundToInt(distX / pathLength)
+      pathLength = math.Sqrt(distY * distY  +  distX * distX) //FIXME can be 0 if start = end, causes division by 0 err
+      dirY = distY / pathLength
+      dirX = distX / pathLength
       projY = startY
       projX = startX
-      projSpeed = math.CeilToInt(delayTime / pathLength)
+      projSpeed = math.CeilToInt(pathLength / delayTime)
       weaponType = randWeapon[2]
 
     ?Type(isEnemyAttack) = "bool"
       // ?!isEnemyAttack
         // playerLastAttack //
         // eButtons[playerLastAttack[0]][playerLastAttack[1]] //
-        projY += dirY * projSpeed
-        projX += dirX * projSpeed
+        projY += math.RoundToInt(dirY * projSpeed)
+        projX += math.RoundToInt(dirX * projSpeed)
         setCanvasY = projY - shotCanvas.y
         setCanvasX = projX - shotCanvas.x
         ?math.Round(projY) > math.Floor(projY)
