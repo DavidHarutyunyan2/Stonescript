@@ -495,6 +495,16 @@ var isEnemyAttack
 //
 var shotCanvas = AddUI("canvas", "top_left", "top_left", playerGridPanel.w + enemyGridPanel.w + 2, playerGridPanel.h, playerGridPanel.absoluteX, playerGridPanel.absoluteY) //TODO move line up
 //
+// ?playerTurn
+//   >`0,0,input @input.x@, @input.y@
+//   >`0,1,start @startX@, @startY@
+//   >`0,2,end   @endX@, @endY@
+//   >`0,3,plen  @pathLength@
+//   >`0,4,speed @projSpeed@
+//   >`0,5,dir   @dirX@, @dirY@
+//   >`0,6,pos   @projX@, @projY@
+//   >`0,7,print @displayX@, @displayY@
+//
 ?turnDelay >= 0
   ?!delayTimeCaptured
     delayTime = turnDelay
@@ -535,45 +545,50 @@ var shotCanvas = AddUI("canvas", "top_left", "top_left", playerGridPanel.w + ene
     var dirX
     var projY
     var projX
+    var displayY
+    var displayX
     var projSpeed
     var setCanvasY
     var setCanvasX
     //TODO There is no animation or delay when the player hits a ship and gets an extra turn
-    //TODO Limit weapon choice to the minimum Y difference between startpos and endpos
     //FIXME attacks start from the player on enemy turn (if the enemy gets an extra turn, the shot goes haywire)
+    //^or... apparently enemy attacks don't get animated anymore
     ?prevEHitListCount[1] ! prevEHitListCount[2]
       isEnemyAttack = true
     //FIXME shot anim (player anim starts from the right spot but doesn't end in the right spot)
-    // diagonal movement doesn't go very well
     ?turnDelay >= delayTime - 1
       ?isEnemyAttack
         randWeapon = enemyWeaponAbsPos[RandIntInRange(0, enemyWeaponAbsPos.Count()-1)]
         endY = pButtons[eHitY][eHitX].absoluteY
-        endX = pButtons[eHitY][eHitX].absoluteX
+        endX = pButtons[eHitY][eHitX].absoluteX + 3 // maybe +2?
       :
         randWeapon = playerWeaponAbsPos[RandIntInRange(0, playerWeaponAbsPos.Count()-1)]
         endY = eButtons[playerLastAttack[0]][playerLastAttack[1]].absoluteY
-        endX = eButtons[playerLastAttack[0]][playerLastAttack[1]].absoluteX
+        endX = eButtons[playerLastAttack[0]][playerLastAttack[1]].absoluteX + 1
       startY = randWeapon[0]
       startX = randWeapon[1]
       distY = endY - startY
       distX = endX - startX
-      pathLength = math.Sqrt(distY * distY  +  distX * distX) //FIXME can be 0 if start = end, causes division by 0 err
+      pathLength = math.Sqrt(distY * distY  +  distX * distX)
       dirY = distY / pathLength
       dirX = distX / pathLength
       projY = startY
       projX = startX
-      projSpeed = math.CeilToInt(pathLength / delayTime)
+      displayY = projY
+      displayX = projX
+      projSpeed = pathLength / delayTime
       weaponType = randWeapon[2]
 
     ?Type(isEnemyAttack) = "bool"
       // ?!isEnemyAttack
         // playerLastAttack //
         // eButtons[playerLastAttack[0]][playerLastAttack[1]] //
-        projY += math.RoundToInt(dirY * projSpeed)
-        projX += math.RoundToInt(dirX * projSpeed)
-        setCanvasY = projY - shotCanvas.y
-        setCanvasX = projX - shotCanvas.x
+        projY += dirY * projSpeed
+        projX += dirX * projSpeed
+        displayY = math.RoundToInt(projY)
+        displayX = math.RoundToInt(projX)
+        setCanvasY = displayY - shotCanvas.y
+        setCanvasX = displayX - shotCanvas.x
         ?math.Round(projY) > math.Floor(projY)
           shotCanvas.Set(setCanvasX, setCanvasY, "#red", blockUp)
         :
@@ -582,8 +597,6 @@ var shotCanvas = AddUI("canvas", "top_left", "top_left", playerGridPanel.w + ene
         // eHitY, eHitX //
         // eHitTile? ebuttons[ehy][ehx]? //
   turnDelay --
-  >@input.x@ - @startX@
-  >`0,1,@input.y@ - @startY@
 
 // ANCHOR Enemy turn
 :?!playerTurn
